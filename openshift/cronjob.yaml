@@ -1,0 +1,92 @@
+---
+apiVersion: v1
+kind: Template
+metadata:
+  name: quay-mysql-diag
+objects:
+- kind: CronJob
+  apiVersion: batch/v1beta1
+  metadata:
+    name: quay-mysql-diag
+    labels:
+      name: quay-mysql-diag
+  spec:
+    schedule: ${SCHEDULE}
+    jobTemplate:
+      spec:
+        backoffLimit: 3
+        activeDeadlineSeconds: 50
+        template:
+          spec:
+            restartPolicy: OnFailure
+            volumes:
+            - name: temp-volume
+              emptyDir: {}
+            - name: mysql-defaults-extra-file
+              secret:
+                readOnly: true
+                secretName: ${MYSQL_DEFAULTS_EXTRA_FILE}
+            - name: quay-config
+              secret:
+                readOnly: true
+                secretName: ${QUAY_CONFIG_SECRET}
+            containers:
+              - name: mysql-diag
+                image: "${IMAGE}:${IMAGE_TAG}"
+                imagePullPolicy: ${IMAGE_PULL_POLICY}
+                volumeMounts:
+                - name: temp-volume
+                  mountPath: /temp-dir
+                - name: mysql-defaults-extra-file
+                  mountPath: /etc/mysql
+                - name: quay-config
+                  mountPath: /etc/quay-config
+                env:
+                - name: MYSQL_DEFAULTS_EXTRA_FILE
+                  value: /etc/mysql/client.cnf
+                - name: TEMP_DIR
+                  value: /temp-dir
+                - name: S3_BUCKET_NAME
+                  valueFrom:
+                    secretKeyRef:
+                      key: bucket
+                      name: ${AWS_S3_SECRET}
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      key: aws_access_key_id
+                      name: ${AWS_S3_SECRET}
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      key: aws_secret_access_key
+                      name: ${AWS_S3_SECRET}
+                - name: AWS_DEFAULT_REGION
+                  valueFrom:
+                    secretKeyRef:
+                      key: aws_region
+                      name: ${AWS_S3_SECRET}
+                - name: CONFIG_FILE
+                  value: /etc/quay-config/config.yaml
+                resources:
+                  limits:
+                    cpu: 100m
+                    memory: 50Mi
+                  requests:
+                    cpu: 50m
+                    memory: 1Mi
+parameters:
+- name: IMAGE
+  value: "quay.io/app-sre/quay-mysql-diag"
+- name: IMAGE_TAG
+  value: "latest"
+- name: IMAGE_PULL_POLICY
+  value: "Always"
+- name: SCHEDULE
+  value: "* * * * *"
+- name: MYSQL_DEFAULTS_EXTRA_FILE
+  value: "mysql-defaults-extra-file"
+- name: AWS_S3_SECRET
+  value: "quay-mysql-diag-s3"
+- name: QUAY_CONFIG_SECRET
+  value: "quay-config-secret"
