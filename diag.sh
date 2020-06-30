@@ -26,7 +26,7 @@ TIMESTAMP=$(date +%Y%m%dT%H%M%S)
 
 # We have python in the image as we have the aws client.
 # Let's do this there instead something unsafe in bash
-DB_HOST=$(python -c "import yaml,urllib.parse; print(urllib.parse.urlparse(yaml.safe_load(open('$CONFIG_FILE'))['DB_URI']).hostname)")
+DB_HOST=$(LC_CTYPE=en_US.UTF-8 python3 -c "import yaml,urllib.parse; print(urllib.parse.urlparse(yaml.safe_load(open('$CONFIG_FILE'))['DB_URI']).hostname)")
 
 cd "${TEMP_DIR}"
 
