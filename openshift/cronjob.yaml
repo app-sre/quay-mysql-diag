@@ -12,10 +12,11 @@ objects:
       name: quay-mysql-diag
   spec:
     schedule: ${SCHEDULE}
+    concurrencyPolicy: Forbid
     jobTemplate:
       spec:
-        backoffLimit: 3
-        activeDeadlineSeconds: 50
+        backoffLimit: ${{BACKOFF_LIMIT}}
+        activeDeadlineSeconds: ${{ACTIVE_DEADLINE_SECONDS}}
         template:
           spec:
             restartPolicy: OnFailure
@@ -90,3 +91,7 @@ parameters:
   value: "quay-mysql-diag-s3"
 - name: QUAY_CONFIG_SECRET
   value: "quay-config-secret"
+- name: BACKOFF_LIMIT
+  value: "5"
+- name: ACTIVE_DEADLINE_SECONDS
+  value: "1200"
