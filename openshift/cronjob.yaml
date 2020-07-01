@@ -2,22 +2,28 @@
 apiVersion: v1
 kind: Template
 metadata:
-  name: quay-mysql-diag
+  name: ${MYSQL_DIAG}
 objects:
 - kind: CronJob
   apiVersion: batch/v1beta1
   metadata:
-    name: quay-mysql-diag
+    name: ${MYSQL_DIAG}
     labels:
-      name: quay-mysql-diag
+      name: ${MYSQL_DIAG}
   spec:
     schedule: ${SCHEDULE}
     concurrencyPolicy: Forbid
     jobTemplate:
+      metadata:
+        labels:
+          cronjob: ${MYSQL_DIAG}
       spec:
         backoffLimit: ${{BACKOFF_LIMIT}}
         activeDeadlineSeconds: ${{ACTIVE_DEADLINE_SECONDS}}
         template:
+          metadata:
+            labels:
+              cronjob: ${MYSQL_DIAG}
           spec:
             restartPolicy: OnFailure
             volumes:
@@ -77,6 +83,8 @@ objects:
                     cpu: 50m
                     memory: 1Mi
 parameters:
+- name: MYSQL_DIAG
+  value: "quay-mysql-diag"
 - name: IMAGE
   value: "quay.io/app-sre/quay-mysql-diag"
 - name: IMAGE_TAG
