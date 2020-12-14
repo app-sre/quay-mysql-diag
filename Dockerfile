@@ -1,4 +1,4 @@
-FROM quay.io/app-sre/centos:7
+FROM quay.io/centos/centos:centos7
 
 ARG AWS_CLI_VERSION=1.18.89
 
